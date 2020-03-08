@@ -1,16 +1,3 @@
-export function isArray(value) {
-  return value && typeof value === 'object' && value.constructor === Array;
-}
-
-export function isObject(value) {
-  return (
-    value &&
-    typeof value === 'object' &&
-    value.constructor === Object &&
-    !value.write
-  );
-}
-
 export function nextPowerOf2(value: number): number {
   if (value <= 0) return 1;
 
