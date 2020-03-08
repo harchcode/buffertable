@@ -149,3 +149,18 @@ export const str: BType = {
   },
   defaultValue: ''
 };
+
+export const typeFromIndex = [u8, u16, u32, i8, i16, i32, f32, f64, bool, str];
+
+export const indexFromType = new Map<BType, number>();
+indexFromType
+  .set(u8, 0)
+  .set(u16, 1)
+  .set(u32, 2)
+  .set(i8, 3)
+  .set(i16, 4)
+  .set(i32, 5)
+  .set(f32, 6)
+  .set(f64, 7)
+  .set(bool, 8)
+  .set(str, 9);

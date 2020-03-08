@@ -92,7 +92,7 @@ test('getBuffer and create table from buffer', t => {
   table.addRow([100, true, 50]);
 
   const buffer = table.getBuffer();
-  const table2 = BufferTable.from(buffer, schema);
+  const table2 = BufferTable.from(buffer);
 
   t.deepEqual(table.unpack(), table2.unpack());
 });

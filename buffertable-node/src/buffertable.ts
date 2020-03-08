@@ -1,4 +1,12 @@
-import { BType, BValue, str, u32 } from './btype';
+import {
+  BType,
+  BValue,
+  str,
+  u32,
+  u8,
+  indexFromType,
+  typeFromIndex
+} from './btype';
 import { nextPowerOf2 } from './utils';
 
 export class BufferTable {
@@ -10,11 +18,27 @@ export class BufferTable {
   private schema: BType[] = [];
   private tableOffset = u32.size;
 
-  private constructor(schema: BType[]) {
+  private constructor() {
+    return;
+  }
+
+  private init(schema: BType[]) {
     this.schema = schema;
+    this.tableOffset = u32.size * 2 + this.schema.length;
+    this.tableBuffer = Buffer.allocUnsafe(u32.size * 2 + schema.length);
+
+    u32.write(this.tableBuffer, 0, schema.length);
+    schema.forEach((type, i) => {
+      u8.write(this.tableBuffer, u32.size + i, indexFromType.get(type));
+    });
+
+    this.setTableSize(0);
+  }
+
+  private calcInfo() {
     let colOffset = 0;
 
-    schema.forEach(type => {
+    this.schema.forEach(type => {
       this.rowSize += type.size;
       this.colOffsets.push(colOffset);
 
@@ -24,29 +48,46 @@ export class BufferTable {
     });
   }
 
+  private readSchemaFromBuffer(buffer: Buffer) {
+    const size = u32.read(buffer, 0)[0] as number;
+
+    this.schema = [];
+
+    for (let i = 0; i < size; i++) {
+      this.schema.push(
+        typeFromIndex[u8.read(buffer, i + u32.size)[0] as number]
+      );
+    }
+
+    this.tableOffset = u32.size * 2 + size;
+  }
+
   private getTableSize(): number {
-    return u32.read(this.tableBuffer, 0)[0] as number;
+    return u32.read(this.tableBuffer, this.tableOffset - u32.size)[0] as number;
   }
 
   private setTableSize(value: number) {
-    u32.write(this.tableBuffer, 0, value);
+    u32.write(this.tableBuffer, this.tableOffset - u32.size, value);
 
     return this;
   }
 
   private resizeBuffer(neededSize: number) {
-    const size = this.tableBuffer.byteLength - u32.size;
+    const size = this.getTableSize();
 
     if (size >= neededSize && size < neededSize * 2) return this;
 
-    const newSize = nextPowerOf2(neededSize) + u32.size;
+    const newSize = nextPowerOf2(neededSize) + this.tableOffset;
 
     const newBuffer = Buffer.allocUnsafe(newSize);
 
     if (size < neededSize) {
       newBuffer.set(this.tableBuffer, 0);
     } else {
-      newBuffer.set(this.tableBuffer.slice(0, neededSize + u32.size), 0);
+      newBuffer.set(
+        this.tableBuffer.slice(0, neededSize + this.tableOffset),
+        0
+      );
     }
 
     this.tableBuffer = newBuffer;
@@ -187,7 +228,7 @@ export class BufferTable {
   getBuffer(): Buffer {
     const tableBuffer = this.tableBuffer.slice(
       0,
-      this.getTableSize() + u32.size
+      this.getTableSize() + this.tableOffset
     );
 
     const strBuffersSizeBuffer = Buffer.allocUnsafe(4);
@@ -201,22 +242,24 @@ export class BufferTable {
   }
 
   static create(schema: BType[]): BufferTable {
-    const bt = new BufferTable(schema);
-    bt.tableBuffer = Buffer.allocUnsafe(u32.size);
-    bt.setTableSize(0);
+    const bt = new BufferTable();
+    bt.init(schema);
+    bt.calcInfo();
 
     return bt;
   }
 
-  static from(buffer: Buffer, schema: BType[]): BufferTable {
-    const table = new BufferTable(schema);
+  static from(buffer: Buffer): BufferTable {
+    const table = new BufferTable();
+    table.readSchemaFromBuffer(buffer);
+    table.calcInfo();
 
-    let offset = 0;
+    let offset = table.tableOffset - u32.size;
 
     const tmp = u32.read(buffer, offset);
 
     const tableSize = tmp[0] as number;
-    table.tableBuffer = buffer.slice(offset, offset + tableSize + tmp[1]);
+    table.tableBuffer = buffer.slice(0, tableSize + table.tableOffset);
     table.setTableSize(tableSize);
 
     offset += tableSize + tmp[1];
