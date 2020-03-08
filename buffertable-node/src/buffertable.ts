@@ -8,8 +8,10 @@ export class BufferTable {
   private rowStrCount = 0;
   private colOffsets: number[] = [];
   private strBuffers: Buffer[] = [];
+  private schema: BType[] = [];
 
-  private constructor(private schema: BType[]) {
+  private constructor(schema: BType[]) {
+    this.schema = schema;
     let colOffset = 0;
 
     schema.forEach(type => {
@@ -31,7 +33,11 @@ export class BufferTable {
 
     const newBuffer = Buffer.allocUnsafe(newSize);
 
-    newBuffer.set(buffer, 0);
+    if (size < neededSize) {
+      newBuffer.set(buffer, 0);
+    } else {
+      newBuffer.set(buffer.slice(0, neededSize), 0);
+    }
 
     return newBuffer;
   }
@@ -104,6 +110,7 @@ export class BufferTable {
 
     if (type !== str) {
       type.write(this.tableBuffer, offset, value);
+      return this;
     }
 
     const strOffset = u32.read(this.tableBuffer, offset)[0] as number;
@@ -128,14 +135,13 @@ export class BufferTable {
     this.strBuffers.splice(strOffset, this.rowStrCount);
 
     const moveOffset = (row + 1) * this.rowSize;
-    if (moveOffset === this.tableSize) return this;
-
     const rowOffset = row * this.rowSize;
+    this.tableSize -= this.rowSize;
+
+    if (rowOffset === this.tableSize) return this;
 
     const tmp = this.tableBuffer.slice(moveOffset);
     this.tableBuffer.set(tmp, rowOffset);
-
-    this.tableSize -= this.rowSize;
 
     this.tableBuffer = this.resizeBuffer(this.tableBuffer, this.tableSize);
 

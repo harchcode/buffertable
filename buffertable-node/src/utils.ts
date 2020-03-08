@@ -12,6 +12,8 @@ export function isObject(value) {
 }
 
 export function nextPowerOf2(value: number): number {
+  if (value <= 0) return 1;
+
   let result = value;
 
   result--;
