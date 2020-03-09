@@ -111,10 +111,7 @@ export class BufferTable {
 
         strOffset++;
 
-        const tmp = Buffer.allocUnsafe(
-          u32.size + str.calculateSize(rowData[i] as string)
-        );
-
+        const tmp = Buffer.allocUnsafe(str.calculateSize(rowData[i] as string));
         str.write(tmp, 0, rowData[i] as string);
 
         this.strBuffers.push(tmp);
@@ -140,7 +137,9 @@ export class BufferTable {
       return type.read(this.tableBuffer, offset)[0];
     }
 
-    const strOffset = u32.read(this.tableBuffer, offset)[0] as number;
+    const strOffset =
+      row * this.rowStrCount +
+      (u32.read(this.tableBuffer, offset)[0] as number);
 
     return str.read(this.strBuffers[strOffset], 0)[0];
   }
@@ -164,15 +163,14 @@ export class BufferTable {
       return this;
     }
 
-    const strOffset = u32.read(this.tableBuffer, offset)[0] as number;
+    const strOffset =
+      row * this.rowStrCount +
+      (u32.read(this.tableBuffer, offset)[0] as number);
 
-    const tmp = Buffer.allocUnsafe(
-      u32.size + str.calculateSize(value as string)
-    );
-
+    const tmp = Buffer.allocUnsafe(str.calculateSize(value as string));
     str.write(tmp, 0, value as string);
 
-    this.strBuffers[row * this.rowStrCount + strOffset] = tmp;
+    this.strBuffers[strOffset] = tmp;
 
     return this;
   }
