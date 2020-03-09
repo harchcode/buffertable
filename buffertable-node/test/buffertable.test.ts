@@ -92,10 +92,7 @@ test('getBuffer and create table from buffer', t => {
 
   const table = BufferTable.create(schema);
 
-  table
-    .addRow([100, true, 50, 'John'])
-    .addRow([45, false, 150, 'Hello'])
-    .addRow([20, true, 500, 'Doe']);
+  table.addRow([100, true, 50, 'John']);
 
   const buffer = table.getBuffer();
 
