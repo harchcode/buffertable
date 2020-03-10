@@ -1,5 +1,4 @@
-import { bool, i32, str } from '../src/btype';
-import { BufferTable } from '../src/buffertable';
+import { BufferTable, i32, bool, str } from '../src';
 import test from 'ava';
 
 test('create, add row, and get row return correct value', t => {
