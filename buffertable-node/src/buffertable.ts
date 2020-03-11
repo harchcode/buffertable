@@ -1,19 +1,20 @@
 import { BType, BValue } from './btype';
 import { u8, u16, u32, i8, i16, i32, f32, f64, bool } from './bptype';
-import { str } from './bstype';
+import { str, table } from './bstype';
 import { nextPowerOf2 } from './utils';
 import {
   SCHEMA_SIZE_TYPE,
   DATA_SIZE_TYPE,
   SCHEMA_TYPE,
   STR_SIZE_TYPE,
-  STR_OFFSET_TYPE,
-  STR_BUFFER_SIZE_TYPE
+  OFFSET_TYPE,
+  VT_BUFFER_SIZE_TYPE,
+  TABLE_SIZE_TYPE
 } from './constants';
 
-export const typeFromIndex = [u8, u16, u32, i8, i16, i32, f32, f64, bool, str];
+const typeFromIndex = [u8, u16, u32, i8, i16, i32, f32, f64, bool, str, table];
 
-export const indexFromType = new Map<BType, number>();
+const indexFromType = new Map<BType, number>();
 indexFromType
   .set(u8, 0)
   .set(u16, 1)
@@ -24,23 +25,25 @@ indexFromType
   .set(f32, 6)
   .set(f64, 7)
   .set(bool, 8)
-  .set(str, 9);
+  .set(str, 9)
+  .set(table, 10);
 
 export class BufferTable {
   private dataBuffer: Buffer;
   private rowSize = 0;
-  private rowStrCount = 0;
   private colOffsets: number[] = [];
-  private strBuffers: Buffer[] = [];
   private schema: BType[] = [];
   private dataOffset = 0;
+  private vt: (Buffer | BufferTable)[] = [];
+  private rowVTCount = 0;
 
   private constructor() {
-    return;
+    // noop
   }
 
   private init(schema: BType[]) {
     this.schema = schema;
+
     this.dataOffset =
       SCHEMA_SIZE_TYPE.size + schema.length + DATA_SIZE_TYPE.size;
     this.dataBuffer = Buffer.allocUnsafe(this.dataOffset);
@@ -64,7 +67,7 @@ export class BufferTable {
       this.rowSize += type.size;
       this.colOffsets.push(colOffset);
 
-      if (type === str) this.rowStrCount++;
+      if (type === str || type === table) this.rowVTCount++;
 
       colOffset += type.size;
     });
@@ -126,19 +129,23 @@ export class BufferTable {
     const newSize = size + this.rowSize;
 
     let offset = size + this.dataOffset;
-    let strOffset = 0;
+    let vtOffset = 0;
 
     this.resizeBuffer(newSize);
     this.setDataSize(newSize);
 
     this.schema.forEach((type, i) => {
-      if (type !== str) {
+      if (type !== str && type !== table) {
         type.write(this.dataBuffer, offset, rowData[i]);
       } else {
-        STR_OFFSET_TYPE.write(this.dataBuffer, offset, strOffset);
-        strOffset++;
+        OFFSET_TYPE.write(this.dataBuffer, offset, vtOffset);
+        vtOffset++;
 
-        this.strBuffers.push(str.create(rowData[i] as string));
+        if (type === str) {
+          this.vt.push(str.create(rowData[i] as string));
+        } else {
+          this.vt.push(rowData[i] as BufferTable);
+        }
       }
 
       offset += type.size;
@@ -159,14 +166,15 @@ export class BufferTable {
     const offset = this.dataOffset + row * this.rowSize + this.colOffsets[col];
     const type = this.schema[col];
 
-    if (type !== str) {
+    if (type !== str && type !== table)
       return type.read(this.dataBuffer, offset);
-    }
 
-    const strOffset = STR_OFFSET_TYPE.read(this.dataBuffer, offset) as number;
-    const strIndex = row * this.rowStrCount + strOffset;
+    const vtOffset = OFFSET_TYPE.read(this.dataBuffer, offset) as number;
+    const strIndex = row * this.rowVTCount + vtOffset;
 
-    return str.read(this.strBuffers[strIndex], 0);
+    if (type === str) return str.read(this.vt[strIndex] as Buffer, 0);
+
+    return this.vt[strIndex] as BufferTable;
   }
 
   getRow(row: number): BValue[] {
@@ -183,15 +191,18 @@ export class BufferTable {
     const offset = this.dataOffset + row * this.rowSize + this.colOffsets[col];
     const type = this.schema[col];
 
-    if (type !== str) {
+    if (type !== str && type !== table) {
       type.write(this.dataBuffer, offset, value);
       return this;
     }
 
-    const strOffset = STR_OFFSET_TYPE.read(this.dataBuffer, offset) as number;
-    const strIndex = row * this.rowStrCount + strOffset;
+    const vtOffset = OFFSET_TYPE.read(this.dataBuffer, offset) as number;
+    const vtIndex = row * this.rowVTCount + vtOffset;
 
-    this.strBuffers[strIndex] = str.create(value as string);
+    if (type === str) this.vt[vtIndex] = str.create(value as string);
+    else {
+      this.vt[vtIndex] = value as BufferTable;
+    }
 
     return this;
   }
@@ -211,15 +222,17 @@ export class BufferTable {
     this.setDataSize(newSize);
     this.resizeBuffer(newSize);
 
-    const strIndex = row * this.rowStrCount;
-    this.strBuffers.splice(strIndex, this.rowStrCount);
+    const strIndex = row * this.rowVTCount;
+    this.vt.splice(strIndex, this.rowVTCount);
 
     const rowOffset = row * this.rowSize + this.dataOffset;
 
     if (rowOffset === newSize) return this;
 
-    const tmp = this.dataBuffer.slice(rowOffset + this.rowSize);
-    this.dataBuffer.set(tmp, rowOffset);
+    this.dataBuffer.set(
+      this.dataBuffer.slice(rowOffset + this.rowSize),
+      rowOffset
+    );
 
     return this;
   }
@@ -250,14 +263,32 @@ export class BufferTable {
       this.getDataSize() + this.dataOffset
     );
 
-    const strBuffersSizeBuffer = Buffer.allocUnsafe(STR_BUFFER_SIZE_TYPE.size);
-    STR_BUFFER_SIZE_TYPE.write(strBuffersSizeBuffer, 0, this.strBuffers.length);
+    const vtSizeBuffer = Buffer.allocUnsafe(VT_BUFFER_SIZE_TYPE.size);
+    VT_BUFFER_SIZE_TYPE.write(vtSizeBuffer, 0, this.vt.length);
 
-    return Buffer.concat([buffer, strBuffersSizeBuffer, ...this.strBuffers]);
+    const vtBuffers: Buffer[] = [];
+
+    this.vt.forEach(value => {
+      if (!(value instanceof BufferTable)) vtBuffers.push(value);
+      else {
+        const tableBuffer = value.getBuffer();
+        const tableWithSizeBuffer = Buffer.allocUnsafe(
+          tableBuffer.length + TABLE_SIZE_TYPE.size
+        );
+
+        TABLE_SIZE_TYPE.write(tableWithSizeBuffer, 0, tableBuffer.length);
+        tableWithSizeBuffer.fill(tableBuffer, TABLE_SIZE_TYPE.size);
+
+        vtBuffers.push(tableWithSizeBuffer);
+      }
+    });
+
+    return Buffer.concat([buffer, vtSizeBuffer, ...vtBuffers]);
   }
 
   static create(schema: BType[]): BufferTable {
     const bt = new BufferTable();
+
     bt.init(schema);
     bt.calcInfo();
 
@@ -265,37 +296,55 @@ export class BufferTable {
   }
 
   static from(buffer: Buffer): BufferTable {
-    const table = new BufferTable();
-    table.readSchemaFromBuffer(buffer);
-    table.calcInfo();
+    const result = new BufferTable();
 
-    let offset = table.dataOffset - DATA_SIZE_TYPE.size;
+    result.readSchemaFromBuffer(buffer);
+    result.calcInfo();
 
-    const tmp = DATA_SIZE_TYPE.read(buffer, offset);
+    let offset = result.dataOffset - DATA_SIZE_TYPE.size;
 
-    const dataSize = tmp as number;
-    table.dataBuffer = buffer.slice(0, dataSize + table.dataOffset);
-    table.setDataSize(dataSize);
+    const dataSize = DATA_SIZE_TYPE.read(buffer, offset) as number;
+
+    result.dataBuffer = buffer.slice(0, dataSize + result.dataOffset);
+    result.setDataSize(dataSize);
 
     offset += dataSize + DATA_SIZE_TYPE.size;
 
-    const tmp2 = STR_BUFFER_SIZE_TYPE.read(buffer, offset);
+    const vtBuffersSize = VT_BUFFER_SIZE_TYPE.read(buffer, offset) as number;
+    offset += VT_BUFFER_SIZE_TYPE.size;
 
-    const strBuffersSize = tmp2;
-    offset += STR_BUFFER_SIZE_TYPE.size;
+    const vtSchema = [];
 
-    table.strBuffers = [];
+    result.schema.forEach(type => {
+      if (type === str || type === table) vtSchema.push(type);
+    });
 
-    for (let i = 0; i < strBuffersSize; i++) {
-      const tmp3 = STR_SIZE_TYPE.read(buffer, offset);
-      const strlen = tmp3 as number;
+    result.vt = [];
 
-      table.strBuffers.push(
-        buffer.slice(offset, offset + strlen + STR_SIZE_TYPE.size)
-      );
-      offset += strlen + STR_SIZE_TYPE.size;
+    for (let i = 0; i < vtBuffersSize; i++) {
+      const type = vtSchema[i % vtSchema.length];
+
+      if (type === str) {
+        const strSize = STR_SIZE_TYPE.read(buffer, offset) as number;
+
+        result.vt.push(
+          buffer.slice(offset, offset + strSize + STR_SIZE_TYPE.size)
+        );
+
+        offset += strSize + STR_SIZE_TYPE.size;
+      } else if (type === table) {
+        const tableSize = TABLE_SIZE_TYPE.read(buffer, offset) as number;
+
+        offset += TABLE_SIZE_TYPE.size;
+
+        result.vt.push(
+          BufferTable.from(buffer.slice(offset, offset + tableSize))
+        );
+
+        offset += tableSize;
+      }
     }
 
-    return table;
+    return result;
   }
 }

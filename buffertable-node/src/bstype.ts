@@ -1,10 +1,8 @@
 import { BType } from './btype';
-import { STR_SIZE_TYPE, STR_OFFSET_TYPE } from './constants';
+import { STR_SIZE_TYPE, OFFSET_TYPE } from './constants';
 
 export const str: BType = {
-  write: (buffer: Buffer, offset: number, value = '') => {
-    const size = Buffer.byteLength(value as string);
-
+  write: (buffer: Buffer, offset: number, value = '', size: number) => {
     STR_SIZE_TYPE.write(buffer, offset, size);
     buffer.write(value as string, offset + STR_SIZE_TYPE.size, size, 'utf-8');
   },
@@ -14,14 +12,23 @@ export const str: BType = {
 
     return buffer.toString('utf-8', dataOffset, dataOffset + size);
   },
-  size: STR_OFFSET_TYPE.size, // this is the size of offset
+  size: OFFSET_TYPE.size,
   create: (value = ''): Buffer => {
     const size = Buffer.byteLength(value as string);
     const buffer = Buffer.allocUnsafe(size + STR_SIZE_TYPE.size);
 
-    STR_SIZE_TYPE.write(buffer, 0, size);
-    buffer.write(value as string, STR_SIZE_TYPE.size, size, 'utf-8');
+    str.write(buffer, 0, value, size);
 
     return buffer;
   }
+};
+
+export const table: BType = {
+  write: () => {
+    // noop
+  },
+  read: (): null => {
+    return null;
+  },
+  size: OFFSET_TYPE.size
 };
