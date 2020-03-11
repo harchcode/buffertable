@@ -1,22 +1,28 @@
 **_This project is still WIP_**
+**_This is just a fun project, use it at your own risk_**
 
 Data transfer between web browser and server are usually done with JSON data, which is in text format. This library helps to create a simple binary table format that can be sent/received to/from server. The main advantage of data transfer using binary format is the size.
 
 BufferTable aims to be used as the data transfer for web (like REST), replacing JSON data.
 
 # Why?
-- It is tiny (<10KB for js source code).
-- It is really easy to use.
+- It is tiny (<10KB for JS source code).
 
 # Supported Languages
 - NodeJS
 - Web (_coming soon_)
+- WebAssembly (_coming soon_)
 - C++ (_planned_)
-- Go (_planned_)
-- Rust (_planned_)
 
 # Installation and Usage
 Please go to specific language directory for instruction.
+
+# Limitations and Caveats
+- Table can only store 4GB (32 bit) size.
+- A table can only have 256 columns.
+- A string can only have 65k (16 bit) size (not the same as length, as 1 char's size can be more than 1 byte).
+- Table columns cannot be changed once created.
+- No error checking, so if you pass invalid value (i.e. you pass a string to a i32 type), no one knows what will happen :)
 
 # FAQ
 **Q: Why only a table?**  
