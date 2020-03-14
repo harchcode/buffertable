@@ -1,6 +1,6 @@
 {
   "name": "buffertable-node",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "Lightweight table of buffers that can be sent to web server or browser",
   "repository": {
     "type": "git",
@@ -29,6 +29,7 @@
     ]
   },
   "license": "MIT",
+  "keywords": ["buffer", "table", "data", "transfer", "REST", "API", "JSON", "binary"],
   "devDependencies": {
     "@types/benchmark": "^1.0.31",
     "@typescript-eslint/eslint-plugin": "^2.22.0",
