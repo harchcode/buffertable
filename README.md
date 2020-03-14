@@ -1,4 +1,3 @@
-**_This project is still WIP_**
 **_This is just a fun project, use it at your own risk_**
 
 Data transfer between web browser and server are usually done with JSON data, which is in text format. This library helps to create a simple binary table format that can be sent/received to/from server. The main advantage of data transfer using binary format is the size.
@@ -6,12 +5,12 @@ Data transfer between web browser and server are usually done with JSON data, wh
 BufferTable aims to be used as the data transfer for web (like REST), replacing JSON data.
 
 # Why?
-- It is tiny (<10KB for JS source code).
+- It is tiny (<10 KB minified for JS);
 
 # Supported Languages
 - NodeJS
 - Web (_coming soon_)
-- WebAssembly (_coming soon_)
+- WebAssembly (_planned_)
 - C++ (_planned_)
 
 # Installation and Usage
