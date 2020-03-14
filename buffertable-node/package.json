@@ -7,7 +7,8 @@
   "scripts": {
     "build": "rm -rf dist && tsc",
     "test": "ava './test/**/*ts' --verbose",
-    "lint": "eslint './{src,test}/**/*.{js,ts}'"
+    "lint": "eslint './{src,test}/**/*.{js,ts}'",
+    "benchmark": "ts-node benchmark/simple.ts"
   },
   "husky": {
     "hooks": {
@@ -26,9 +27,11 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/benchmark": "^1.0.31",
     "@typescript-eslint/eslint-plugin": "^2.22.0",
     "@typescript-eslint/parser": "^2.22.0",
     "ava": "^3.5.0",
+    "benchmark": "^2.1.4",
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.10.0",
     "eslint-plugin-prettier": "^3.1.2",
