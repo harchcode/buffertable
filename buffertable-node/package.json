@@ -1,6 +1,6 @@
 {
-  "name": "buffertable-js",
-  "version": "0.0.1",
+  "name": "buffertable-node",
+  "version": "0.0.8",
   "description": "Lightweight table of buffers that can be sent to web server or browser",
   "repository": {},
   "main": "dist/index.js",
