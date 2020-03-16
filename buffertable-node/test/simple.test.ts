@@ -1,12 +1,17 @@
 import test from 'ava';
 
 (async () => {
-  const { BufferTable, i8, i32, bool, str, table } = await import(
-    process.env.NODE_ENV === 'test-web' ? '../src/web' : '../src/node'
-  );
+  const { BufferTable, BType } = await (process.env.NODE_ENV === 'test-web'
+    ? import('../src/node')
+    : import('../src/node'));
 
   test('create, add row, and get row return correct value', t => {
-    const res = BufferTable.create([i32, bool, i32, str]);
+    const res = BufferTable.create([
+      BType.I32,
+      BType.BOOL,
+      BType.I32,
+      BType.STR
+    ]);
 
     res.addRow([100, true, 50, 'John']);
     t.deepEqual(res.getRow(0), [100, true, 50, 'John']);
@@ -16,7 +21,12 @@ import test from 'ava';
   });
 
   test('row count', t => {
-    const res = BufferTable.create([i32, bool, i32, str]);
+    const res = BufferTable.create([
+      BType.I32,
+      BType.BOOL,
+      BType.I32,
+      BType.STR
+    ]);
 
     res.addRow([100, true, 50, 'John']);
     res.addRow([100, true, 50, 'John']);
@@ -30,7 +40,12 @@ import test from 'ava';
   });
 
   test('set data and get data', t => {
-    const res = BufferTable.create([i32, bool, i32, str]);
+    const res = BufferTable.create([
+      BType.I32,
+      BType.BOOL,
+      BType.I32,
+      BType.STR
+    ]);
 
     res.addRow([100, true, 50, 'John']);
     res.addRow([45, false, 150, 'Hello']);
@@ -58,7 +73,12 @@ import test from 'ava';
   });
 
   test('delete row', t => {
-    const res = BufferTable.create([i32, bool, i32, str]);
+    const res = BufferTable.create([
+      BType.I32,
+      BType.BOOL,
+      BType.I32,
+      BType.STR
+    ]);
 
     res
       .addRow([100, true, 50, 'John'])
@@ -76,7 +96,12 @@ import test from 'ava';
   });
 
   test('unpack', t => {
-    const res = BufferTable.create([i32, bool, i32, str]);
+    const res = BufferTable.create([
+      BType.I32,
+      BType.BOOL,
+      BType.I32,
+      BType.STR
+    ]);
 
     res
       .addRow([100, true, 50, 'John'])
@@ -91,9 +116,12 @@ import test from 'ava';
   });
 
   test('getBuffer and create table from buffer', t => {
-    const schema = [i32, bool, i32, str];
-
-    const res = BufferTable.create(schema);
+    const res = BufferTable.create([
+      BType.I32,
+      BType.BOOL,
+      BType.I32,
+      BType.STR
+    ]);
 
     res.addRow([100, true, 50, 'John']);
 

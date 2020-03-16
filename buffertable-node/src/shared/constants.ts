@@ -1,16 +1,18 @@
 export enum BType {
-  U8 = 'u8',
-  U16 = 'u16',
-  U32 = 'u32',
-  I8 = 'i8',
-  I16 = 'i16',
-  I32 = 'i32',
-  F32 = 'f32',
-  F64 = 'f64',
-  BOOL = 'bool',
-  STR = 'str',
-  TABLE = 'table'
+  U8 = 0,
+  U16,
+  U32,
+  I8,
+  I16,
+  I32,
+  F32,
+  F64,
+  BOOL,
+  STR,
+  TABLE
 }
+
+export const BSIZE = [1, 2, 4, 1, 2, 4, 4, 8, 1, 1, 1];
 
 export const SCHEMA_SIZE_TYPE = BType.U8;
 export const SCHEMA_TYPE = BType.U8;

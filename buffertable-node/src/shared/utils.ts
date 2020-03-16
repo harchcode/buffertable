@@ -13,3 +13,9 @@ export function nextPowerOf2(value: number): number {
 
   return result;
 }
+
+export function staticImplements<T>() {
+  return <U extends T>(constructor: U) => {
+    constructor;
+  };
+}

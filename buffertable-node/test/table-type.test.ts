@@ -1,14 +1,20 @@
 import test from 'ava';
 
 (async () => {
-  const { BufferTable, i8, i32, bool, str, table } = await import(
-    process.env.NODE_ENV === 'test-web' ? '../src/web' : '../src/node'
-  );
+  const { BufferTable, BType } = await (process.env.NODE_ENV === 'test-web'
+    ? import('../src/node')
+    : import('../src/node'));
 
   test('create, add row, and get row with table type returns correct value', t => {
-    const tb1 = BufferTable.create([i32, bool, i32, str, table]);
+    const tb1 = BufferTable.create([
+      BType.I32,
+      BType.BOOL,
+      BType.I32,
+      BType.STR,
+      BType.TABLE
+    ]);
 
-    const tb2 = BufferTable.create([i8, str, i8, bool]);
+    const tb2 = BufferTable.create([BType.I8, BType.STR, BType.I8, BType.BOOL]);
     tb2.addRow([1, 'Sam', 27, true]);
     tb2.addRow([2, 'Som', 16, false]);
 
@@ -17,9 +23,15 @@ import test from 'ava';
   });
 
   test('getBuffer and create table from buffer with table type', t => {
-    const tb1 = BufferTable.create([i32, bool, i32, str, table]);
+    const tb1 = BufferTable.create([
+      BType.I32,
+      BType.BOOL,
+      BType.I32,
+      BType.STR,
+      BType.TABLE
+    ]);
 
-    const tb2 = BufferTable.create([i8, str, i8, bool]);
+    const tb2 = BufferTable.create([BType.I8, BType.STR, BType.I8, BType.BOOL]);
     tb2.addRow([1, 'Sam', 27, true]);
     tb2.addRow([2, 'Som', 16, false]);
 

@@ -1,19 +1,39 @@
 import { BType } from './constants';
 
 export type BValue = number | boolean | string;
+export type BTValue = BValue | BufferTableInterface;
 
-export type BWriter = {
-  [key in BType]: (
-    buffer: Buffer | DataView,
-    offset: number,
-    value: BValue
-  ) => void;
-};
+export interface BBufferStaticInterface {
+  fromStr: (value: string) => BBufferInterface;
+  create: (size: number) => void;
+  from: (buffer: ArrayBuffer) => BBufferInterface;
+  concat: (buffers: Uint8Array[]) => Uint8Array;
+}
 
-export type BReader = {
-  [key in BType]: (buffer: Buffer | DataView, offset: number) => BValue;
-};
+export interface BBufferInterface {
+  write: (type: BType, offset: number, value: BValue) => void;
+  read: (type: BType, offset: number) => BValue;
+  getBuffer: () => Uint8Array;
+  slice: (start?: number, end?: number) => BBufferInterface;
+  set: (bBuffer: BBufferInterface, offset?: number) => void;
+  fill: (buffer: Uint8Array, offset?: number) => void;
+}
 
-export type BSize = {
-  [key in BType]: number;
-};
+export interface BufferTableStaticInterface {
+  create: (types: BType[]) => BufferTableInterface;
+  from: (buffer: ArrayBuffer) => BufferTableInterface;
+}
+
+export interface BufferTableInterface {
+  addRow: (rowData: BTValue[]) => BufferTableInterface;
+  addRows: (rowsData: BTValue[][]) => BufferTableInterface;
+  getRow: (row: number) => BTValue[];
+  getData: (row: number, col: number) => BTValue;
+  setData: (row: number, col: number, value: BTValue) => BufferTableInterface;
+  setRow: (row: number, values: BTValue[]) => BufferTableInterface;
+  deleteRow: (row: number) => BufferTableInterface;
+  getRowCount: () => number;
+  unpack: () => BTValue[][];
+  forEach: (fn: (row?: BTValue[], index?: number) => void) => void;
+  getBuffer: () => Uint8Array;
+}
