@@ -1,7 +1,7 @@
-import { BType } from './btype';
+import { BTypeObj } from './btype';
 import { STR_SIZE_TYPE, OFFSET_TYPE } from './constants';
 
-export const str: BType = {
+export const str: BTypeObj = {
   write: (buffer: Buffer, offset: number, value = '', size: number) => {
     STR_SIZE_TYPE.write(buffer, offset, size);
     buffer.write(value as string, offset + STR_SIZE_TYPE.size, size, 'utf-8');
@@ -23,7 +23,7 @@ export const str: BType = {
   }
 };
 
-export const table: BType = {
+export const table: BTypeObj = {
   write: () => {
     // noop
   },

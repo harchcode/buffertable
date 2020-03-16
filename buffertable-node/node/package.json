@@ -1,0 +1,19 @@
+{
+  "name": "buffertable-node",
+  "version": "0.0.7",
+  "description": "Lightweight table of buffers that can be sent to web server or browser",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/harchcode/buffertable",
+    "directory": "buffertable-node"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint && npm test"
+    }
+  },
+  "license": "MIT",
+  "keywords": ["buffer", "table", "data", "transfer", "REST", "API", "JSON", "binary"]
+}

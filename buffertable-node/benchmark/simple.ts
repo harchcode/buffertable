@@ -5,7 +5,7 @@
 */
 
 import * as Benchmark from 'benchmark';
-import { BufferTable, i8, str, i32, bool } from '../src';
+import { BufferTable, i8, str, i32, bool } from '../src/node';
 
 const suite = new Benchmark.Suite();
 

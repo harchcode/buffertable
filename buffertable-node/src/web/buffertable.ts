@@ -1,7 +1,7 @@
-import { BType, BValue } from './btype';
+import { BTypeObj, BValue } from './btype';
 import { u8, u16, u32, i8, i16, i32, f32, f64, bool } from './bptype';
 import { str, table } from './bstype';
-import { nextPowerOf2 } from './utils';
+import { nextPowerOf2 } from '../shared/utils';
 import {
   SCHEMA_SIZE_TYPE,
   DATA_SIZE_TYPE,
@@ -14,7 +14,7 @@ import {
 
 const typeFromIndex = [u8, u16, u32, i8, i16, i32, f32, f64, bool, str, table];
 
-const indexFromType = new Map<BType, number>();
+const indexFromType = new Map<BTypeObj, number>();
 indexFromType
   .set(u8, 0)
   .set(u16, 1)
@@ -32,7 +32,7 @@ export class BufferTable {
   private dataBuffer: Buffer;
   private rowSize = 0;
   private colOffsets: number[] = [];
-  private schema: BType[] = [];
+  private schema: BTypeObj[] = [];
   private dataOffset = 0;
   private vt: (Buffer | BufferTable)[] = [];
   private rowVTCount = 0;
@@ -41,7 +41,7 @@ export class BufferTable {
     // noop
   }
 
-  private init(schema: BType[]) {
+  private init(schema: BTypeObj[]) {
     this.schema = schema;
 
     this.dataOffset =
@@ -286,7 +286,7 @@ export class BufferTable {
     return Buffer.concat([buffer, vtSizeBuffer, ...vtBuffers]);
   }
 
-  static create(schema: BType[]): BufferTable {
+  static create(schema: BTypeObj[]): BufferTable {
     const bt = new BufferTable();
 
     bt.init(schema);

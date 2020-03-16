@@ -1,4 +1,4 @@
-import { BType } from './btype';
+import { BType } from '../shared/btype';
 
 export const u8: BType = {
   write: (buffer: Buffer, offset: number, value = 0) => {

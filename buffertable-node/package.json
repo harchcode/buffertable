@@ -10,7 +10,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "rm -rf dist && tsc",
+    "build:node": "rm -rf node/dist && tsc --outDir node/dist",
     "test": "ava './test/**/*ts' --verbose",
     "lint": "eslint './{src,test}/**/*.{js,ts}'",
     "benchmark": "ts-node benchmark/simple.ts"
