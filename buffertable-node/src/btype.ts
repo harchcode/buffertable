@@ -6,14 +6,14 @@ export type BTValue = BValue | BufferTableInterface;
 export interface BBufferStaticInterface {
   fromStr: (value: string) => BBufferInterface;
   create: (size: number) => void;
-  from: (buffer: ArrayBuffer) => BBufferInterface;
+  from: (buffer: Uint8Array) => BBufferInterface;
   concat: (buffers: Uint8Array[]) => Uint8Array;
 }
 
 export interface BBufferInterface {
   write: (type: BType, offset: number, value: BValue) => void;
   read: (type: BType, offset: number) => BValue;
-  getBuffer: () => Uint8Array;
+  toUint8Array: () => Uint8Array;
   slice: (start?: number, end?: number) => BBufferInterface;
   set: (bBuffer: BBufferInterface, offset?: number) => void;
   fill: (buffer: Uint8Array, offset?: number) => void;
@@ -21,7 +21,7 @@ export interface BBufferInterface {
 
 export interface BufferTableStaticInterface {
   create: (types: BType[]) => BufferTableInterface;
-  from: (buffer: ArrayBuffer) => BufferTableInterface;
+  from: (buffer: Uint8Array) => BufferTableInterface;
 }
 
 export interface BufferTableInterface {
@@ -35,5 +35,5 @@ export interface BufferTableInterface {
   getRowCount: () => number;
   unpack: () => BTValue[][];
   forEach: (fn: (row?: BTValue[], index?: number) => void) => void;
-  getBuffer: () => Uint8Array;
+  toUint8Array: () => Uint8Array;
 }

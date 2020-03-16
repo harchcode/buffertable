@@ -2,14 +2,12 @@
   "name": "buffertable-js",
   "version": "0.0.1",
   "description": "Lightweight table of buffers that can be sent to web server or browser",
-  "repository": { },
+  "repository": {},
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build:node": "rm -rf node/dist && tsc --outDir node/dist",
+    "build": "rm -rf dist && tsc",
     "test": "ava './test/**/*ts' --verbose",
-    "test:web": "NODE_ENV=test-web npm run test",
-    "test:node": "NODE_ENV=test-node npm run test",
     "lint": "eslint './{src,test}/**/*.{js,ts}'",
     "benchmark": "ts-node benchmark/simple.ts"
   },
@@ -27,7 +25,16 @@
     ]
   },
   "license": "MIT",
-  "keywords": ["buffer", "table", "data", "transfer", "REST", "API", "JSON", "binary"],
+  "keywords": [
+    "buffer",
+    "table",
+    "data",
+    "transfer",
+    "REST",
+    "API",
+    "JSON",
+    "binary"
+  ],
   "devDependencies": {
     "@types/benchmark": "^1.0.31",
     "@typescript-eslint/eslint-plugin": "^2.22.0",
@@ -41,5 +48,6 @@
     "prettier": "^1.19.1",
     "ts-node": "^8.6.2",
     "typescript": "^3.8.3"
-  }
+  },
+  "dependencies": {}
 }

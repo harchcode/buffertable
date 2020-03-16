@@ -1,10 +1,6 @@
-import {
-  BBufferStaticInterface,
-  BBufferInterface,
-  BValue
-} from '../shared/btype';
-import { BType, STR_SIZE_TYPE, BSIZE } from '../shared/constants';
-import { staticImplements } from '../shared/utils';
+import { BBufferStaticInterface, BBufferInterface, BValue } from './btype';
+import { BType, STR_SIZE_TYPE, BSIZE } from './constants';
+import { staticImplements } from './utils';
 
 const BFuncKey = [
   'Uint8',
@@ -23,27 +19,23 @@ const decoder = new TextDecoder();
 
 @staticImplements<BBufferStaticInterface>()
 export class BBuffer implements BBufferInterface {
-  private buffer: Uint8Array;
+  private arr: Uint8Array;
   private dv: DataView;
 
   private constructor() {
     // noop
   }
 
-  slice(start?: number, end?: number): BBuffer {
-    const result = new BBuffer();
-
-    result.buffer = this.buffer.slice(start, end);
-
-    return result;
+  slice(start = 0, end?: number): BBuffer {
+    return BBuffer.from(this.arr.slice(start, end));
   }
 
   set(bBuffer: BBuffer, offset?: number) {
-    this.buffer.set(bBuffer.buffer, offset);
+    this.arr.set(bBuffer.arr, offset);
   }
 
   fill(buffer: Uint8Array, offset?: number) {
-    this.buffer.set(buffer, offset);
+    this.arr.set(buffer, offset);
   }
 
   write(type: BType, offset: number, value: BValue) {
@@ -63,29 +55,29 @@ export class BBuffer implements BBufferInterface {
       const size = this.read(STR_SIZE_TYPE, offset) as number;
       const dataOffset = offset + BSIZE[STR_SIZE_TYPE];
 
-      return decoder.decode(this.buffer.slice(dataOffset, dataOffset + size));
+      return decoder.decode(this.arr.slice(dataOffset, dataOffset + size));
     }
   }
 
-  getBuffer(): Uint8Array {
-    return this.buffer;
+  toUint8Array(): Uint8Array {
+    return this.arr;
   }
 
   static create(size: number): BBuffer {
     const result = new BBuffer();
 
     const ab = new ArrayBuffer(size);
-    result.buffer = new Uint8Array(ab);
+    result.arr = new Uint8Array(ab);
     result.dv = new DataView(ab);
 
     return result;
   }
 
-  static from(buffer: ArrayBuffer): BBuffer {
+  static from(buffer: Uint8Array): BBuffer {
     const result = new BBuffer();
 
-    result.buffer = new Uint8Array(buffer);
-    result.dv = new DataView(buffer);
+    result.arr = buffer;
+    result.dv = new DataView(buffer.buffer);
 
     return result;
   }

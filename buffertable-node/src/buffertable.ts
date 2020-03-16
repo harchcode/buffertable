@@ -4,8 +4,8 @@ import {
   BufferTableStaticInterface,
   BufferTableInterface,
   BTValue
-} from '../shared/btype';
-import { nextPowerOf2, staticImplements } from '../shared/utils';
+} from './btype';
+import { nextPowerOf2, staticImplements } from './utils';
 import {
   BType,
   SCHEMA_SIZE_TYPE,
@@ -16,7 +16,7 @@ import {
   VT_BUFFER_SIZE_TYPE,
   TABLE_SIZE_TYPE,
   BSIZE
-} from '../shared/constants';
+} from './constants';
 
 @staticImplements<BufferTableStaticInterface>()
 export class BufferTable implements BufferTableInterface {
@@ -244,7 +244,7 @@ export class BufferTable implements BufferTableInterface {
     }
   }
 
-  getBuffer(): Uint8Array {
+  toUint8Array(): Uint8Array {
     const buffer = this.dataBuffer.slice(
       0,
       this.getDataSize() + this.dataOffset
@@ -256,9 +256,9 @@ export class BufferTable implements BufferTableInterface {
     const vtBuffers: Uint8Array[] = [];
 
     this.vt.forEach(value => {
-      if (!(value instanceof BufferTable)) vtBuffers.push(value.getBuffer());
+      if (!(value instanceof BufferTable)) vtBuffers.push(value.toUint8Array());
       else {
-        const tableBuffer = value.getBuffer();
+        const tableBuffer = value.toUint8Array();
 
         const tableWithSizeBuffer = BBuffer.create(
           tableBuffer.byteLength + BSIZE[TABLE_SIZE_TYPE]
@@ -267,13 +267,13 @@ export class BufferTable implements BufferTableInterface {
         tableWithSizeBuffer.write(TABLE_SIZE_TYPE, 0, tableBuffer.byteLength);
         tableWithSizeBuffer.fill(tableBuffer, BSIZE[TABLE_SIZE_TYPE]);
 
-        vtBuffers.push(tableWithSizeBuffer.getBuffer());
+        vtBuffers.push(tableWithSizeBuffer.toUint8Array());
       }
     });
 
     return BBuffer.concat([
-      buffer.getBuffer(),
-      vtSizeBuffer.getBuffer(),
+      buffer.toUint8Array(),
+      vtSizeBuffer.toUint8Array(),
       ...vtBuffers
     ]);
   }
@@ -287,7 +287,7 @@ export class BufferTable implements BufferTableInterface {
     return bt;
   }
 
-  static from(arrayBuffer: ArrayBuffer): BufferTable {
+  static from(arrayBuffer: Uint8Array): BufferTable {
     const result = new BufferTable();
 
     const buffer = BBuffer.from(arrayBuffer);
@@ -332,7 +332,9 @@ export class BufferTable implements BufferTableInterface {
         offset += BSIZE[TABLE_SIZE_TYPE];
 
         result.vt.push(
-          BufferTable.from(buffer.slice(offset, offset + tableSize).getBuffer())
+          BufferTable.from(
+            buffer.slice(offset, offset + tableSize).toUint8Array()
+          )
         );
 
         offset += tableSize;
