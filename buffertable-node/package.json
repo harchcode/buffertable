@@ -1,17 +1,15 @@
 {
-  "name": "buffertable-node",
-  "version": "0.0.4",
+  "name": "buffertable-js",
+  "version": "0.0.1",
   "description": "Lightweight table of buffers that can be sent to web server or browser",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/harchcode/buffertable",
-    "directory": "buffertable-node"
-  },
+  "repository": { },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build:node": "rm -rf node/dist && tsc --outDir node/dist",
     "test": "ava './test/**/*ts' --verbose",
+    "test:web": "NODE_ENV=test-web npm run test",
+    "test:node": "NODE_ENV=test-node npm run test",
     "lint": "eslint './{src,test}/**/*.{js,ts}'",
     "benchmark": "ts-node benchmark/simple.ts"
   },
