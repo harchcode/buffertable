@@ -1,3 +1,5 @@
+# :warning: This project is deprecated.
+
 **_This is just a fun project, use it at your own risk_**
 
 Data transfer between web browser and server are usually done with JSON data, which is in text format. This library helps to create a simple binary table format that can be sent/received to/from server. The main advantage of data transfer using binary format is the size.
